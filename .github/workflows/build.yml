@@ -24,7 +24,7 @@ jobs:
           sudo ldconfig
       - name: Build
         run: |
-          mkdir build && cd build
-          cmake -DCMAKE_BUILD_TYPE=MinSizeRel ..
-          make -j"$(nproc)"
-          ./slimmer --help
+          # out of source, the CMakeLists globs every *.cpp below the source dir
+          cmake -S . -B ../build -DCMAKE_BUILD_TYPE=MinSizeRel
+          make -C ../build -j"$(nproc)"
+          ../build/slimmer --help
