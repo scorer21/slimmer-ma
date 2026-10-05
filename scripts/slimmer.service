@@ -1,0 +1,15 @@
+[Unit]
+Description=Slimmer (display and buttons for Music Assistant)
+After=network-online.target LCDd.service
+Wants=network-online.target
+
+[Service]
+EnvironmentFile=/etc/default/slimmer
+ExecStart=/usr/local/bin/slimmer $OPTIONS
+Restart=always
+RestartSec=3
+# slimmer only logs errors; keep the journal small anyway
+StandardOutput=null
+
+[Install]
+WantedBy=multi-user.target

@@ -42,7 +42,7 @@ int main(int argc, char* argv[])
 	if (Config::verbose())
 	{
 		cout << "Configuration:" << endl;
-		cout << "  LMS: " << Config::lmsHost() << ":" << Config::lmsPort() << " named \"" << Config::lmsName() << "\"" << endl;
+		cout << "  Music Assistant: " << Config::maHost() << ":" << Config::maPort() << (Config::maToken().empty() ? " (no token)" : " (with token)") << endl;
 		cout << "  LCDd: " << Config::lcdHost() << ":" << Config::lcdPort() << endl;
 		cout << "  PlayerId (MAC): " << Config::playerId() << endl;
 		cout << "  Input device: " << Config::inputDeviceFile() << endl;

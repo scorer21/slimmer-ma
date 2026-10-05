@@ -24,13 +24,16 @@
 
 using namespace std;
 
+// Talks to a Music Assistant server (HTTP API at /api) and hands back the
+// data in the same shape as the old LMS JSON-RPC answers, so the rest of
+// slimmer did not have to change.
 class Server
 {
 public:
 	enum PlaylistControlCommand {ADD, LOAD};
 	enum PlaylistControlType {GENRE, ARTIST, ALBUM, TRACK, YEAR, PLAYLIST, FOLDER, PLAYLISTNAME};
 
-	Server(const string& url);
+	Server(const string& url, const string& token = "");
 	Json::Value artists(const bool albumArtists = false);
 	Json::Value albums(const string& artistId = "");
 	Json::Value newAlbums();
@@ -55,9 +58,16 @@ public:
 protected:
 	static const unsigned int cMaxResponseItems = 10000;
 
+	Json::Value call(const string& command, const Json::Value& args = Json::Value(Json::objectValue));
+	string queueId(const string& playerId) const;
+	void playMedia(const string& playerId, const Json::Value& media, const PlaylistControlCommand cmd);
+	Json::Value libraryItems(const string& mediaType, const bool favoritesOnly = false, const string& orderBy = "sort_name", const int limit = cMaxResponseItems);
+
 	jsonrpc::HttpClient mHttpClient;
-	jsonrpc::Client mClient;
 	string mVersion;
+	string mQueueId; // Active queue of the player, learned from the last status query
+	int mVolume; // Last known volume, needed because MA only knows absolute volume
+	unsigned int mMessageId;
 };
 
 #endif // SERVER_H

@@ -32,6 +32,8 @@ add_executable(${PROJECT_NAME} ${SRC_LIST})
 target_link_libraries (${PROJECT_NAME} lcdapi curl icuuc)
 
 add_definitions(-flto -fuse-linker-plugin -pipe)
+# Newer ICU versions no longer put UnicodeString in the global namespace
+add_definitions(-DU_USING_ICU_NAMESPACE=1)
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 11)
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD_REQUIRED ON)
 
