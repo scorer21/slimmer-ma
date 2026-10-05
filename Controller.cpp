@@ -28,7 +28,7 @@
 
 Controller::Controller()
 	: mLcd(Config::lcdHost(), Config::lcdPort()),
-	  mServer("http://" + Config::lmsHost() + ":" + to_string(Config::lmsPort()) + "/jsonrpc.js"),
+	  mServer("http://" + Config::maHost() + ":" + to_string(Config::maPort()) + "/api", Config::maToken()),
 	  mNowPlayingScreen(&mLcd),
 	  mErrorScreen(&mLcd),
 	  mMenuScreen(&mLcd, mServer.version()),
@@ -70,7 +70,7 @@ Controller::Controller()
 			 << ", Height: " << mLcd.getHeight()
 			 << ", Char width: " << mLcd.getCharWidth()
 			 << ", Char height: " << mLcd.getCharHeight() << ")" << endl;
-		cout << "LMS version: " + mServer.version() << endl;
+		cout << "Music Assistant version: " + mServer.version() << endl;
 	}
 
 	updateStatus(mStatusUpdateTimer, 0);
@@ -103,12 +103,12 @@ void Controller::updateStatus(ev::timer& w, int revents)
 	catch (const jsonrpc::JsonRpcException& e)
 	{
 		string message;
-		if (e.GetMessage().find("libcurl error: 52") != string::npos)
-			message = "Player " + mPlayer.id() + " is unknown at the server";
-		else if (e.GetMessage().find("libcurl error: 7") != string::npos)
-			message = "No connection to LMS server at " + Config::lmsHost() + ":" + to_string(Config::lmsPort());
+		if (e.GetMessage().find("libcurl error: 7") != string::npos)
+			message = "No connection to Music Assistant at " + Config::maHost() + ":" + to_string(Config::maPort());
 		else if (e.GetMessage().find("libcurl error: 28") != string::npos)
-			message = "Slow connection to LMS server at " + Config::lmsHost() + ":" + to_string(Config::lmsPort());
+			message = "Slow connection to Music Assistant at " + Config::maHost() + ":" + to_string(Config::maPort());
+		else if (e.GetMessage().find("Authentication") != string::npos || e.GetMessage().find("401") != string::npos)
+			message = "Music Assistant rejected the token";
 		else
 			message = e.what();
 		hideMenuScreen();
@@ -491,7 +491,9 @@ void Controller::actionShowRadios(MenuItem& selected)
 			Json::Value radios = mPlayer.radios(selected.id());
 			selected.clearItems();
 			for (int i = 0; i < radios.size(); i++)
-				selected.addItem(MenuItem(radios[i]["id"].asString(), MenuItem::RADIOMENU, radios[i]["name"].asString()));
+				selected.addItem(MenuItem(radios[i]["id"].asString(),
+								radios[i]["hasitems"].asInt() == 0 ? MenuItem::RADIO : MenuItem::RADIOMENU,
+								radios[i]["name"].asString()));
 		} break;
 		case MenuItem::RADIOMENU:
 		{

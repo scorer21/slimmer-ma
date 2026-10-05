@@ -1,6 +1,23 @@
-# Slimmer
+# Slimmer for Music Assistant
 
-**A user interface controller software for Logitech Media Server.**
+This fork of [terba/slimmer](https://github.com/terba/slimmer) talks to
+[Music Assistant](https://music-assistant.io) instead of Logitech Media Server.
+Display, buttons, volume control and the menus stay the same; only the server
+side changed (see `Server.cpp`).
+
+* The player is still squeezelite. MA picks it up through its Squeezelite
+  provider, and the player id is the MAC address, as before.
+* Slimmer uses the MA HTTP API (`http://<host>:8095/api`). It needs a
+  long-lived access token, created in the MA web interface under your profile.
+  Pass it with `--matoken` or the environment variable `MA_TOKEN`.
+* Menus: *Album Artists*, *All Artists*, *Albums* and *New Music* come from the
+  MA library, *Browse* is the MA provider browser, *Favorites* are all library
+  items marked as favorite, and *Radios* lists the radio stations and playlists
+  of the library.
+* `scripts/slimmer.service` and `scripts/slimmer.conf.sample` are for a
+  systemd based system such as Raspberry Pi OS.
+
+**Original description:** A user interface controller software for Logitech Media Server.
 
 Basically it's a hub between LMS, LCDProc and standard linux keyboard events. For more information visit the [Slimmer wiki](https://github.com/terba/slimmer/wiki).
 
@@ -45,7 +62,7 @@ You can configure Slimmer through command line arguments. For general usage see 
 
 ```
 Usage:
-   ./slimmer  [-v] [-s <ip or hostname>] [-p <number>] [-l <ip or
+   ./slimmer  [-v] [-s <ip or hostname>] [-p <number>] [-t <token>] [-l <ip or
               hostname>] [-P <number>] [-m <AA:BB:CC:DD:EE:FF>] [-f] [-o
               <0-100>] [-i <input device file>] [-e <single-byte encoding>]
               [-c <0-10>] [--] [--version] [-h]
@@ -54,11 +71,15 @@ Where:
    -v,  --verbose
      be verbose
 
-   -s <ip or hostname>,  --lmshost <ip or hostname>
-     LMS host (default: autodiscovery)
+   -s <ip or hostname>,  --mahost <ip or hostname>
+     Music Assistant host (default: localhost)
 
-   -p <number>,  --lmsport <number>
-     LMS HTTP port (default: autodiscovery)
+   -p <number>,  --maport <number>
+     Music Assistant HTTP port (default: 8095)
+
+   -t <token>,  --matoken <token>
+     Music Assistant long-lived access token (default: environment variable
+     MA_TOKEN)
 
    -l <ip or hostname>,  --lcdhost <ip or hostname>
      lcdproc host (default: localhost)

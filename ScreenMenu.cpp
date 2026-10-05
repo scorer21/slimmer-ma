@@ -34,12 +34,11 @@ ScreenMenu::ScreenMenu(LCDClient* parent, const string& serverVersion) : Screen(
 	// Creating the menu structure
 	mMenu.addItem(MenuItem("", MenuItem::QUEUE, "Playing queue", true));
 	mMenu.addItem(MenuItem("", MenuItem::MENU, "Music library"));
-	if (serverVersion >= "7.9.0")
-		mMenu.item(mMenu.itemCount() - 1).addItem(MenuItem("", MenuItem::ALBUMARTISTS, "Album Artists"));
-	mMenu.item(mMenu.itemCount() - 1).addItem(MenuItem("", MenuItem::ARTISTS, serverVersion >= "7.9.0" ? "All Artists" : "Artists"));
+	mMenu.item(mMenu.itemCount() - 1).addItem(MenuItem("", MenuItem::ALBUMARTISTS, "Album Artists"));
+	mMenu.item(mMenu.itemCount() - 1).addItem(MenuItem("", MenuItem::ARTISTS, "All Artists"));
 	mMenu.item(mMenu.itemCount() - 1).addItem(MenuItem("", MenuItem::ALBUMS, "Albums"));
 	mMenu.item(mMenu.itemCount() - 1).addItem(MenuItem("", MenuItem::NEWMUSIC, "New Music"));
-	mMenu.item(mMenu.itemCount() - 1).addItem(MenuItem("", MenuItem::FOLDERS, "Folders"));
+	mMenu.item(mMenu.itemCount() - 1).addItem(MenuItem("", MenuItem::FOLDERS, "Browse"));
 	mMenu.addItem(MenuItem("", MenuItem::FAVORITES, "Favorites"));
 	mMenu.addItem(MenuItem("", MenuItem::RADIOS, "Radios"));
 	mPath.push_back(&mMenu);

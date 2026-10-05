@@ -29,9 +29,9 @@ public:
 	int static processOptions(int argc, char* argv[]);
 
 	const bool static verbose() { return mVerbose; }
-	const string static lmsName() { return mLmsName; }
-	const string static lmsHost() { return mLmsHost; }
-	const int static lmsPort() { return mLmsPort; }
+	const string static maHost() { return mMaHost; }
+	const int static maPort() { return mMaPort; }
+	const string static maToken() { return mMaToken; }
 	const string static lcdHost() { return mLcdHost; }
 	const int static lcdPort() { return mLcdPort; }
 	const string static playerId() { return mPlayerId; }
@@ -43,7 +43,6 @@ public:
 
 protected:
 	string static getMacAddress();
-	void static discoverLMS();
 
 public:
 	static const short int cRetryDelay; // In seconds
@@ -60,9 +59,9 @@ public:
 
 protected:
 	bool static mVerbose;
-	string static mLmsName;
-	string static mLmsHost;
-	int static mLmsPort;
+	string static mMaHost;
+	int static mMaPort;
+	string static mMaToken;
 	string static mLcdHost;
 	int static mLcdPort;
 	string static mPlayerId;

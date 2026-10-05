@@ -1,1 +1,4 @@
-OPTIONS=""
+# /etc/default/slimmer
+# Music Assistant server and the long-lived token from the MA profile page
+MA_TOKEN=""
+OPTIONS="--mahost 192.168.1.10 --maport 8095 --input /dev/input/event0 --volume 100 --encoding ISO-8859-2"
