@@ -123,18 +123,19 @@ int Config::processOptions(int argc, char* argv[])
 	{
 		throw(ArgParseException("Invalid character encoding specified", "--encoding"));
 	}
+	return 0;
 }
 
 std::string Config::getMacAddress()
 {
 	struct ifaddrs* interface_addrs  = NULL;
-	if (getifaddrs(&interface_addrs) == -1 || !interface_addrs) return 0;
+	if (getifaddrs(&interface_addrs) == -1 || !interface_addrs) return "";
 
 	int32_t sd = socket( PF_INET, SOCK_DGRAM, 0 );
 	if (sd < 0)
 	{
 		freeifaddrs( interface_addrs );
-		return 0;
+		return "";
 	}
 
 	std::ostringstream os;
