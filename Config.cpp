@@ -22,6 +22,8 @@
 
 #include <stdexcept>
 #include <cstdlib>
+#include <sstream>
+#include <glob.h>
 #include <unistd.h>
 #include <cstring>
 #include <ifaddrs.h>
@@ -53,7 +55,7 @@ int Config::mLcdPort;
 string Config::mPlayerId;
 bool Config::mFixedVolume;
 int Config::mVolume;
-string Config::mInputDeviceFile;
+vector<string> Config::mInputDeviceFiles;
 string Config::mEncoding;
 int Config::mScrollSpeed;
 
@@ -74,7 +76,7 @@ int Config::processOptions(int argc, char* argv[])
 	ValueArg<string> macArg("m", "mac", "the player's MAC address (default: automatic, first interface)", false, "", "AA:BB:CC:DD:EE:FF");
 	SwitchArg fixedvolumeArg("f", "fixedvolume", "volume control disabled", false);
 	ValueArg<int> volumeArg("o", "volume", "set volume on startup", false, -1, "0-100");
-	ValueArg<string> inputArg("i", "input", "keyboard input device file (default: /dev/input/event0)", false, "/dev/input/event0", "input device file");
+	ValueArg<string> inputArg("i", "input", "input device files, comma separated, \"all\" for every /dev/input/event* (default: /dev/input/event0)", false, "/dev/input/event0", "input device files");
 	ValueArg<string> encodingArg("e", "encoding", "the LCD's character encoding (default: ISO-8859-1)", false, "ISO-8859-1", "single-byte encoding");
 	ValueArg<int> scrollspeedArg("c", "scrollspeed", "text scrolling speed (default: 3)", false, 3, "0-10");
 
@@ -104,7 +106,22 @@ int Config::processOptions(int argc, char* argv[])
 	mPlayerId = macArg.getValue();
 	mFixedVolume = fixedvolumeArg.getValue();
 	mVolume = volumeArg.getValue();
-	mInputDeviceFile = inputArg.getValue();
+	mInputDeviceFiles.clear();
+	stringstream inputs(inputArg.getValue());
+	string input;
+	while (getline(inputs, input, ','))
+	{
+		if (input == "all")
+		{
+			glob_t found;
+			if (glob("/dev/input/event*", 0, nullptr, &found) == 0)
+				for (size_t i = 0; i < found.gl_pathc; i++)
+					mInputDeviceFiles.push_back(found.gl_pathv[i]);
+			globfree(&found);
+		}
+		else if (!input.empty())
+			mInputDeviceFiles.push_back(input);
+	}
 	mEncoding = encodingArg.getValue();
 	mScrollSpeed = scrollspeedArg.getValue();
 
