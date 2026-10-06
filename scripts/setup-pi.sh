@@ -15,6 +15,8 @@
 
 set -euo pipefail
 
+# apt-get waits up to 10 minutes if something else (e.g. apt-daily) holds the dpkg lock
+
 [ "$(id -u)" = 0 ] || { echo "Bitte mit sudo starten: sudo bash $0"; exit 1; }
 
 REPO=https://github.com/scorer21/slimmer-ma.git
@@ -52,8 +54,8 @@ START_VOLUME=${START_VOLUME:-70}
 PLAYER_MAC=${PLAYER_MAC:-$(cat /sys/class/net/eth0/address 2>/dev/null || true)}
 
 echo "==> Pakete (das dauert am Pi 1 eine Weile)"
-apt-get update
-DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+apt-get -o DPkg::Lock::Timeout=600 update
+DEBIAN_FRONTEND=noninteractive apt-get -o DPkg::Lock::Timeout=600 install -y --no-install-recommends \
 	squeezelite lcdproc i2c-tools alsa-utils git ca-certificates curl \
 	build-essential cmake autoconf automake libtool libcurl4-openssl-dev libicu-dev
 
@@ -169,10 +171,10 @@ echo "==> Compiler wieder runter"
 # keep the libraries slimmer links against
 ldd /usr/local/bin/slimmer | awk '/=> \//{print $3}' | xargs -r readlink -f | xargs -r dpkg -S 2>/dev/null \
 	| cut -d: -f1 | sort -u | xargs -r apt-mark manual >/dev/null || true
-DEBIAN_FRONTEND=noninteractive apt-get purge -y build-essential cmake autoconf automake libtool \
+DEBIAN_FRONTEND=noninteractive apt-get -o DPkg::Lock::Timeout=600 purge -y build-essential cmake autoconf automake libtool \
 	libcurl4-openssl-dev libicu-dev
-DEBIAN_FRONTEND=noninteractive apt-get autoremove --purge -y
-apt-get clean
+DEBIAN_FRONTEND=noninteractive apt-get -o DPkg::Lock::Timeout=600 autoremove --purge -y
+apt-get -o DPkg::Lock::Timeout=600 clean
 rm -rf "$SRC/slimmer-build" "$SRC/lcdapi"
 
 echo "==> SD-Karte schonen"
