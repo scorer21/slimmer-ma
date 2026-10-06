@@ -45,7 +45,8 @@ int main(int argc, char* argv[])
 		cout << "  Music Assistant: " << Config::maHost() << ":" << Config::maPort() << (Config::maToken().empty() ? " (no token)" : " (with token)") << endl;
 		cout << "  LCDd: " << Config::lcdHost() << ":" << Config::lcdPort() << endl;
 		cout << "  PlayerId (MAC): " << Config::playerId() << endl;
-		cout << "  Input device: " << Config::inputDeviceFile() << endl;
+		for (const string& file : Config::inputDeviceFiles())
+			cout << "  Input device: " << file << endl;
 	}
 
 	while (1)

@@ -129,3 +129,18 @@ To exit from Slimmer press `Ctrl+c`.
 ### Run as a daemon
 
 To run Slimmer as a daemon you can use and adapt [the init script](https://github.com/terba/slimmer/blob/master/scripts/slimmer) located in the *scripts* folder of the sources. It is meant to be used on Tiny Core style distributions (piCore, piCorePlayer), so it doesn't contain LSB headers used on more sophisticated distros.
+
+## Raspberry Pi setup (Music Assistant)
+
+`scripts/setup-pi.sh` turns a fresh Raspberry Pi OS Lite into a player: squeezelite on the USB sound card,
+LCDd for a 20x4 HD44780 on I2C, rotary encoder and buttons through the kernel overlays `rotary-encoder` and
+`gpio-key` (no pikeyd needed), slimmer as a systemd service, and the journal, `/var/log` and `/tmp` in RAM
+to spare the SD card.
+
+```
+curl -fsSL https://raw.githubusercontent.com/scorer21/slimmer-ma/master/scripts/setup-pi.sh -o setup-pi.sh
+sudo bash setup-pi.sh
+```
+
+`--input` takes a comma separated list of input devices, `all` opens every `/dev/input/event*`.
+Relative events of a rotary encoder (`REL_X`) are handled like the left and right keys.

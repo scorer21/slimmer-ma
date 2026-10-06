@@ -25,6 +25,8 @@
 #include <fcntl.h>
 #include <linux/input.h>
 #include <unicode/ucnv.h>
+#include <cstdlib>
+#include <unistd.h>
 
 Controller::Controller()
 	: mLcd(Config::lcdHost(), Config::lcdPort()),
@@ -45,11 +47,18 @@ Controller::Controller()
 	mButtons.push_back(new Button(this, KEY_BACKSPACE, BACK, BACKLONG));
 	mButtons.push_back(new Button(this, KEY_SPACE, FORWARD));
 
-	if ((mInputDeviceFileDescriptor = open(Config::inputDeviceFile().c_str(), O_RDONLY | O_NONBLOCK)) == -1)
-		throw ErrorInput("Can not open device file " + Config::inputDeviceFile());
-
-	mInputDeviceIo.set<Controller, &Controller::readInput>(this);
-	mInputDeviceIo.start(mInputDeviceFileDescriptor, ev::READ);
+	for (const string& file : Config::inputDeviceFiles())
+	{
+		int fd = open(file.c_str(), O_RDONLY | O_NONBLOCK);
+		if (fd == -1)
+			throw ErrorInput("Can not open device file " + file);
+		ev::io* io = new ev::io;
+		io->set<Controller, &Controller::readInput>(this);
+		io->start(fd, ev::READ);
+		mInputDeviceIos.push_back(io);
+		if (Config::verbose())
+			cout << "Input device: " << file << endl;
+	}
 
 	mStatusUpdateTimer.set<Controller, &Controller::updateStatus>(this);
 	mStatusUpdateTimer.start(Config::cPlayerStatusQueryInterval, Config::cPlayerStatusQueryInterval);
@@ -80,12 +89,16 @@ Controller::Controller()
 
 Controller::~Controller()
 {
-	mInputDeviceIo.stop();
+	for (ev::io* io : mInputDeviceIos)
+	{
+		io->stop();
+		close(io->fd);
+		delete io;
+	}
 	mStatusUpdateTimer.stop();
 	mVolumeScreenHideTimer.stop();
 	mMenuScreenHideTimer.stop();
 	mStandbyTimer.stop();
-	close(mInputDeviceFileDescriptor);
 	for (Button* button : mButtons) delete button;
 }
 
@@ -375,13 +388,27 @@ void Controller::readInput(ev::io& w, int revents)
 	struct input_event inputEvent;
 	int readSize;
 
-	while ((readSize = read(mInputDeviceFileDescriptor, &inputEvent, sizeof(inputEvent))) > 0)
+	while ((readSize = read(w.fd, &inputEvent, sizeof(inputEvent))) > 0)
 	{
-		if (readSize == sizeof(inputEvent) && inputEvent.type == EV_KEY && (inputEvent.value == 1 || inputEvent.value == 0 || inputEvent.value == 2))
+		if (readSize != sizeof(inputEvent))
+			continue;
+		if (inputEvent.type == EV_KEY && (inputEvent.value == 1 || inputEvent.value == 0 || inputEvent.value == 2))
 		{
 			Button::ButtonEvent buttonEvent = inputEvent.value == 1 ? Button::PRESS : inputEvent.value == 0 ? Button::RELEASE : Button::REPEAT;
 			for (Button* const button : mButtons)
 				button->handleKey(buttonEvent, inputEvent.code);
+		}
+		// A rotary encoder handled by the kernel (dtoverlay=rotary-encoder) reports relative steps,
+		// each step is turned into a press and release of the left or right key.
+		else if (inputEvent.type == EV_REL && inputEvent.code == REL_X && inputEvent.value != 0)
+		{
+			const unsigned short key = inputEvent.value > 0 ? KEY_RIGHT : KEY_LEFT;
+			for (int i = abs(inputEvent.value); i > 0; i--)
+				for (Button* const button : mButtons)
+				{
+					button->handleKey(Button::PRESS, key);
+					button->handleKey(Button::RELEASE, key);
+				}
 		}
 	}
 	if (readSize == -1 && errno != EAGAIN && errno != EINTR)
