@@ -11,7 +11,8 @@
 #
 # Everything can be preset through the environment, otherwise the script asks:
 #   PLAYER_NAME, MA_HOST, MA_PORT, MA_TOKEN, LCD_ADDR, ENCODER_A, ENCODER_B,
-#   KEY_ENTER_GPIO, KEY_SPACE_GPIO, KEY_BACK_GPIO, ALSA_PARAMS, START_VOLUME
+#   KEY_ENTER_GPIO, KEY_SPACE_GPIO, KEY_BACK_GPIO, ALSA_PARAMS, START_VOLUME,
+#   CARD_LEVEL (hardware level of the USB sound card, default 100%, "keep" leaves it alone)
 
 set -euo pipefail
 
@@ -48,6 +49,7 @@ KEY_SPACE_GPIO=${KEY_SPACE_GPIO:-27}
 KEY_BACK_GPIO=${KEY_BACK_GPIO:-18}
 ALSA_PARAMS=${ALSA_PARAMS:-80:4::1}
 START_VOLUME=${START_VOLUME:-70}
+CARD_LEVEL=${CARD_LEVEL:-100%}
 
 # The player id in Music Assistant is the MAC address. Pin it to the wired one,
 # so the player stays the same when it later runs over WLAN.
@@ -84,6 +86,16 @@ if [ -z "$CARD" ]; then
 else
 	echo "    USB-Soundkarte: $CARD"
 	OUTPUT="sysdefault:CARD=$CARD"
+	# Cheap USB cards boot with a low hardware level, which makes everything far too quiet.
+	# This only sets the ceiling, the actual volume stays with squeezelite / Music Assistant.
+	if [ "$CARD_LEVEL" != keep ]; then
+		CONTROL=$(amixer -c "$CARD" scontrols 2>/dev/null | grep -m1 -oE "'(Speaker|PCM|Headphone)'" | tr -d "'" || true)
+		if [ -n "$CONTROL" ]; then
+			amixer -q -c "$CARD" sset "$CONTROL" "$CARD_LEVEL" unmute || true
+			alsactl store || true
+			echo "    Pegel $CONTROL: $CARD_LEVEL"
+		fi
+	fi
 fi
 cat > /etc/default/squeezelite <<EOF
 # written by setup-pi.sh
