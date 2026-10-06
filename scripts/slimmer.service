@@ -1,6 +1,6 @@
 [Unit]
 Description=Slimmer (display and buttons for Music Assistant)
-After=network-online.target LCDd.service
+After=network-online.target lcdproc.service
 Wants=network-online.target
 
 [Service]

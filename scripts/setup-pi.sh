@@ -137,7 +137,8 @@ CharMap=hd44780_default
 DelayBus=true
 Keypad=no
 EOF
-systemctl enable LCDd
+# Debian ships LCDd as lcdproc.service
+systemctl enable lcdproc
 
 echo "==> lcdapi"
 mkdir -p "$SRC"
