@@ -56,7 +56,7 @@ PLAYER_MAC=${PLAYER_MAC:-$(cat /sys/class/net/eth0/address 2>/dev/null || true)}
 echo "==> Pakete (das dauert am Pi 1 eine Weile)"
 apt-get -o DPkg::Lock::Timeout=600 update
 DEBIAN_FRONTEND=noninteractive apt-get -o DPkg::Lock::Timeout=600 install -y --no-install-recommends \
-	squeezelite lcdproc i2c-tools alsa-utils git ca-certificates curl \
+	squeezelite lcdproc lcdproc-extra-drivers i2c-tools alsa-utils git ca-certificates curl \
 	build-essential cmake autoconf automake libtool libcurl4-openssl-dev libicu-dev
 
 echo "==> config.txt: I2C, Drehgeber, Tasten"
@@ -95,7 +95,9 @@ systemctl enable squeezelite
 systemctl restart squeezelite || true
 
 echo "==> LCDd"
+# hd44780.so comes with lcdproc-extra-drivers
 DRIVER_PATH=$(dirname "$(find /usr/lib -name hd44780.so 2>/dev/null | head -1)")/
+[ "$DRIVER_PATH" != "./" ] || { echo "    hd44780.so nicht gefunden, ist lcdproc-extra-drivers installiert?"; exit 1; }
 cat > /etc/LCDd.conf <<EOF
 # written by setup-pi.sh - HD44780 20x4 behind a PCF8574 I2C backpack
 [server]
